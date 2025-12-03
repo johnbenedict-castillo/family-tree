@@ -24,3 +24,63 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Print Styles */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 1cm;
+  }
+
+  body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background-image: 
+      radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 20%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+    background-attachment: fixed;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .family-tree-print {
+    background: transparent;
+    padding: 2rem;
+  }
+
+  /* Hide edit/delete buttons when printing */
+  button {
+    display: none !important;
+  }
+
+  /* Ensure cards print nicely */
+  .bg-white {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Make lines more visible in print */
+  .bg-gray-400 {
+    background-color: #9ca3af !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Remove shadows for cleaner print */
+  .shadow-md,
+  .shadow-lg {
+    box-shadow: none !important;
+  }
+
+  /* Ensure text is readable */
+  * {
+    color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Hide background gradient on main container when printing */
+  .min-h-screen.bg-gradient-to-br {
+    background: transparent !important;
+  }
+}
