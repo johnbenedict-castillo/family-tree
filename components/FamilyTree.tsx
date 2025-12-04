@@ -134,7 +134,7 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
     return (
       <div key={member.id} className="flex flex-col items-center relative">
         {/* Couple Container - Member and Spouse side by side */}
-        <div className="flex items-center gap-4 mb-4 relative">
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 mb-4 relative">
           {/* Member Card */}
           <div className="relative">
             <MemberCard
@@ -147,24 +147,48 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
           {/* Spouse Connection Line and Spouse Card */}
           {hasSpouse && (
             <>
+              {/* Horizontal line on desktop, vertical on mobile */}
               <div className="relative flex items-center">
-                <div className="w-4 h-0.5 bg-gray-400"></div>
-                {/* Heart Icon */}
-                <div className="flex items-center justify-center w-6 h-6">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-red-500 fill-current"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                {/* Horizontal line for desktop */}
+                <div className="hidden sm:flex items-center">
+                  <div className="w-4 h-0.5 bg-gray-400"></div>
+                  {/* Heart Icon */}
+                  <div className="flex items-center justify-center w-6 h-6">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 text-red-500 fill-current"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="w-4 h-0.5 bg-gray-400"></div>
                 </div>
-                <div className="w-4 h-0.5 bg-gray-400"></div>
+                {/* Vertical line for mobile */}
+                <div className="flex sm:hidden flex-col items-center">
+                  <div className="w-0.5 h-4 bg-gray-400"></div>
+                  {/* Heart Icon */}
+                  <div className="flex items-center justify-center w-6 h-6">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 text-red-500 fill-current"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="w-0.5 h-4 bg-gray-400"></div>
+                </div>
               </div>
               <div className="relative">
                 <MemberCard
@@ -200,7 +224,7 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
 
         {/* Children Container */}
         {hasChildren && (
-          <div className="flex gap-8 justify-center items-start relative">
+          <div className="flex flex-wrap gap-4 sm:gap-8 justify-center items-start relative px-2">
             {/* Continuous horizontal line connecting all children */}
             {member.children.length > 0 && (
               <div 
@@ -274,7 +298,7 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
   }
 
   return (
-    <div className="flex flex-col items-center py-8 family-tree-print">
+    <div className="flex flex-col items-center py-4 sm:py-8 family-tree-print min-w-0">
       {rootMembers.map(member => renderCouple(member))}
     </div>
   )

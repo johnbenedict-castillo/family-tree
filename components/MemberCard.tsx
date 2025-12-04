@@ -62,7 +62,7 @@ export default function MemberCard({ member, onEdit, onDelete }: MemberCardProps
   }
 
   return (
-    <div className={`${getBackgroundColor()} rounded-lg shadow-md p-2 w-48 h-44 flex flex-col items-center hover:shadow-lg transition-shadow border-2 ${getBorderColor()}`}>
+    <div className={`${getBackgroundColor()} rounded-lg shadow-md p-2 w-40 sm:w-48 h-44 flex flex-col items-center hover:shadow-lg transition-shadow border-2 ${getBorderColor()}`}>
       {/* Circular Photo */}
       <div className="relative w-14 h-14 mb-1 flex-shrink-0">
         {member.photo_url ? (

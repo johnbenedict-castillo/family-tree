@@ -226,7 +226,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         {/* Header */}
         <div className="mb-8 text-center">
           {isEditingTitle ? (
@@ -252,13 +252,13 @@ export default function Home() {
                   setTreeTitle(localStorage.getItem('familyTreeTitle') || 'Family Tree')
                 }
               }}
-              className="text-4xl font-bold text-gray-800 mb-2 text-center bg-transparent border-2 border-blue-500 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-2xl sm:text-4xl font-bold text-gray-800 mb-2 text-center bg-transparent border-2 border-blue-500 rounded px-2 sm:px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
               autoFocus
             />
           ) : (
             <h1
               onClick={() => setIsEditingTitle(true)}
-              className="text-4xl font-bold text-gray-800 mb-2 cursor-pointer hover:text-blue-600 transition-colors"
+              className="text-2xl sm:text-4xl font-bold text-gray-800 mb-2 cursor-pointer hover:text-blue-600 transition-colors px-2"
               title="Click to edit title"
             >
               {treeTitle}
@@ -267,10 +267,10 @@ export default function Home() {
         </div>
 
         {/* Action Buttons */}
-        <div className="mb-6 flex justify-center gap-4">
+        <div className="mb-6 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4">
           <button
             onClick={handleAddMember}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-colors flex items-center gap-2"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -289,7 +289,7 @@ export default function Home() {
           <button
             onClick={handleDownloadTree}
             disabled={isDownloading}
-            className="bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-colors flex items-center gap-2"
+            className="bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -308,10 +308,10 @@ export default function Home() {
         </div>
 
         {/* Family Tree */}
-        <div ref={treeRef} className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-8">
+        <div ref={treeRef} className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-4 sm:p-8 overflow-x-auto">
           {/* Title for download - hidden in normal view */}
-          <div className="text-center mb-8 hidden" data-download-title>
-            <h1 className="text-4xl font-bold text-gray-800">
+          <div className="text-center mb-4 sm:mb-8 hidden" data-download-title>
+            <h1 className="text-2xl sm:text-4xl font-bold text-gray-800">
               {treeTitle}
             </h1>
           </div>
