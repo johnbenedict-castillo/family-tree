@@ -8,9 +8,10 @@ interface MemberCardProps {
   member: FamilyMember
   onEdit?: (member: FamilyMember) => void
   onDelete?: (id: string) => void
+  isPrimary?: boolean // True if this is the primary member (child), false if spouse
 }
 
-export default function MemberCard({ member, onEdit, onDelete }: MemberCardProps) {
+export default function MemberCard({ member, onEdit, onDelete, isPrimary }: MemberCardProps) {
   const displayName = member.nick_name || member.first_name
   const middleName = member.middle_name ? ` ${member.middle_name}` : ''
   const fullName = `${member.first_name}${middleName} ${member.last_name}`
@@ -62,7 +63,13 @@ export default function MemberCard({ member, onEdit, onDelete }: MemberCardProps
   }
 
   return (
-    <div className={`${getBackgroundColor()} rounded-lg shadow-md p-2 w-40 sm:w-48 h-44 flex flex-col items-center hover:shadow-lg transition-shadow border-2 ${getBorderColor()}`}>
+    <div className={`${getBackgroundColor()} rounded-lg shadow-md p-2 w-40 sm:w-48 h-44 flex flex-col items-center hover:shadow-lg transition-shadow border-2 ${getBorderColor()} relative`}>
+      {/* Indicator for primary member (child) - only show if member has a parent */}
+      {isPrimary && member.parent_id && (
+        <div className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold z-10" title="Child">
+          C
+        </div>
+      )}
       {/* Circular Photo */}
       <div className="relative w-14 h-14 mb-1 flex-shrink-0">
         {member.photo_url ? (

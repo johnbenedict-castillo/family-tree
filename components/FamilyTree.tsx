@@ -132,15 +132,16 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
     const hasChildren = member.children && member.children.length > 0
 
     return (
-      <div key={member.id} className="flex flex-col items-center relative">
+      <div key={member.id} className="flex flex-col items-center relative" data-member-id={member.id}>
         {/* Couple Container - Member and Spouse side by side */}
         <div className="flex items-center gap-2 sm:gap-4 mb-4 relative">
-          {/* Member Card */}
+          {/* Member Card - Primary (child) */}
           <div className="relative">
             <MemberCard
               member={member}
               onEdit={onEdit}
               onDelete={onDelete}
+              isPrimary={true}
             />
           </div>
 
@@ -171,6 +172,7 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
                   member={member.spouse!}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  isPrimary={false}
                 />
               </div>
             </>
