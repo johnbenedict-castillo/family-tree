@@ -154,25 +154,126 @@ export default function Home() {
       await new Promise(resolve => setTimeout(resolve, 200))
 
       try {
-        // Use html-to-image which handles modern CSS better
-        const dataUrl = await toPng(treeRef.current, {
-          backgroundColor: '#e0e7ff',
-          pixelRatio: 2,
-          quality: 1,
-          filter: (node) => {
-            // Hide buttons
-            if (node instanceof HTMLElement) {
-              return !(
-                node.tagName === 'BUTTON' || 
-                node.textContent?.trim() === 'Edit' || 
-                node.textContent?.trim() === 'Delete' ||
-                node.classList.contains('print:hidden') || 
-                node.hasAttribute('data-member-form')
-              )
+        // Find the inner tree container that has the actual scrollable content
+        const treeContainer = treeRef.current.querySelector('.family-tree-print') as HTMLElement
+        const innerTree = treeContainer?.querySelector('.min-w-max') as HTMLElement
+        
+        // Store original styles
+        const originalOverflow = treeRef.current.style.overflow
+        const originalOverflowX = treeRef.current.style.overflowX
+        const originalOverflowY = treeRef.current.style.overflowY
+        const originalMaxWidth = treeRef.current.style.maxWidth
+        const originalMaxHeight = treeRef.current.style.maxHeight
+        const originalWidth = treeRef.current.style.width
+        const originalHeight = treeRef.current.style.height
+        
+        let dataUrl: string
+        
+        if (treeContainer && innerTree) {
+          const containerOriginalOverflow = treeContainer.style.overflow
+          const containerOriginalOverflowX = treeContainer.style.overflowX
+          const containerOriginalOverflowY = treeContainer.style.overflowY
+          const containerOriginalWidth = treeContainer.style.width
+          const containerOriginalHeight = treeContainer.style.height
+          
+          // Get the actual full dimensions by measuring the inner content
+          // First, temporarily make everything visible to get accurate measurements
+          treeRef.current.style.overflow = 'visible'
+          treeRef.current.style.overflowX = 'visible'
+          treeRef.current.style.overflowY = 'visible'
+          treeRef.current.style.maxWidth = 'none'
+          treeRef.current.style.maxHeight = 'none'
+          treeRef.current.style.width = 'auto'
+          treeRef.current.style.height = 'auto'
+          
+          treeContainer.style.overflow = 'visible'
+          treeContainer.style.overflowX = 'visible'
+          treeContainer.style.overflowY = 'visible'
+          treeContainer.style.width = 'auto'
+          treeContainer.style.height = 'auto'
+          
+          // Wait for layout to recalculate
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+          // Get the actual rendered dimensions
+          const rect = innerTree.getBoundingClientRect()
+          const scrollWidth = Math.max(
+            innerTree.scrollWidth,
+            innerTree.offsetWidth,
+            rect.width,
+            treeContainer.scrollWidth,
+            treeRef.current.scrollWidth
+          )
+          const scrollHeight = Math.max(
+            innerTree.scrollHeight,
+            innerTree.offsetHeight,
+            rect.height,
+            treeContainer.scrollHeight,
+            treeRef.current.scrollHeight
+          )
+          
+          // Set explicit dimensions to ensure full capture
+          treeRef.current.style.width = `${scrollWidth + 100}px` // Add padding
+          treeRef.current.style.height = `${scrollHeight + 100}px`
+          
+          // Wait again for layout
+          await new Promise(resolve => setTimeout(resolve, 300))
+
+          // Use html-to-image which handles modern CSS better
+          dataUrl = await toPng(treeRef.current, {
+            backgroundColor: '#e0e7ff',
+            pixelRatio: 2,
+            quality: 1,
+            // Don't specify width/height, let it capture the full element
+            filter: (node) => {
+              // Hide buttons
+              if (node instanceof HTMLElement) {
+                return !(
+                  node.tagName === 'BUTTON' || 
+                  node.textContent?.trim() === 'Edit' || 
+                  node.textContent?.trim() === 'Delete' ||
+                  node.classList.contains('print:hidden') || 
+                  node.hasAttribute('data-member-form')
+                )
+              }
+              return true
             }
-            return true
-          }
-        })
+          })
+
+          // Restore original styles
+          treeRef.current.style.overflow = originalOverflow
+          treeRef.current.style.overflowX = originalOverflowX
+          treeRef.current.style.overflowY = originalOverflowY
+          treeRef.current.style.maxWidth = originalMaxWidth
+          treeRef.current.style.maxHeight = originalMaxHeight
+          treeRef.current.style.width = originalWidth
+          treeRef.current.style.height = originalHeight
+          
+          treeContainer.style.overflow = containerOriginalOverflow
+          treeContainer.style.overflowX = containerOriginalOverflowX
+          treeContainer.style.overflowY = containerOriginalOverflowY
+          treeContainer.style.width = containerOriginalWidth
+          treeContainer.style.height = containerOriginalHeight
+        } else {
+          // Fallback if structure is different
+          dataUrl = await toPng(treeRef.current, {
+            backgroundColor: '#e0e7ff',
+            pixelRatio: 2,
+            quality: 1,
+            filter: (node) => {
+              if (node instanceof HTMLElement) {
+                return !(
+                  node.tagName === 'BUTTON' || 
+                  node.textContent?.trim() === 'Edit' || 
+                  node.textContent?.trim() === 'Delete' ||
+                  node.classList.contains('print:hidden') || 
+                  node.hasAttribute('data-member-form')
+                )
+              }
+              return true
+            }
+          })
+        }
 
         // Hide the download title again
         if (downloadTitle) {
@@ -308,7 +409,7 @@ export default function Home() {
         </div>
 
         {/* Family Tree */}
-        <div ref={treeRef} className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-4 sm:p-8 overflow-x-auto">
+        <div ref={treeRef} className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-4 sm:p-8">
           {/* Title for download - hidden in normal view */}
           <div className="text-center mb-4 sm:mb-8 hidden" data-download-title>
             <h1 className="text-2xl sm:text-4xl font-bold text-gray-800">
