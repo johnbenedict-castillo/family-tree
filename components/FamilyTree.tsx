@@ -202,7 +202,7 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
 
         {/* Children Container */}
         {hasChildren && (
-          <div className="flex gap-4 sm:gap-8 justify-center items-start relative min-w-max">
+          <div className="flex gap-4 sm:gap-8 justify-center items-start relative" style={{ minWidth: 'max-content' }}>
             {/* Continuous horizontal line connecting all children */}
             {member.children.length > 0 && (
               <div 
@@ -276,8 +276,8 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
   }
 
   return (
-    <div className="flex flex-col items-center py-4 sm:py-8 family-tree-print w-full overflow-x-auto">
-      <div className="flex flex-col items-center min-w-max">
+    <div className="flex flex-col items-center py-4 sm:py-8 family-tree-print w-full overflow-x-auto overflow-y-visible" style={{ scrollbarWidth: 'thin' }}>
+      <div className="flex flex-col items-center" style={{ minWidth: 'max-content', width: 'max-content', marginLeft: 'auto', marginRight: 'auto', paddingLeft: '50%', paddingRight: '50%' }}>
         {rootMembers.map(member => renderCouple(member))}
       </div>
     </div>

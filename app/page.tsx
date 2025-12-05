@@ -327,7 +327,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 max-w-full">
         {/* Header */}
         <div className="mb-8 text-center">
           {isEditingTitle ? (
@@ -409,7 +409,7 @@ export default function Home() {
         </div>
 
         {/* Family Tree */}
-        <div ref={treeRef} className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-4 sm:p-8">
+        <div ref={treeRef} className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-4 sm:p-8 overflow-x-auto">
           {/* Title for download - hidden in normal view */}
           <div className="text-center mb-4 sm:mb-8 hidden" data-download-title>
             <h1 className="text-2xl sm:text-4xl font-bold text-gray-800">
