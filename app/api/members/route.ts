@@ -61,19 +61,24 @@ export async function POST(request: Request) {
     let photoUrl = null
 
     if (photo && photo.size > 0) {
-      const fileExt = photo.name.split('.').pop()
-      const fileName = `${Math.random()}.${fileExt}`
-      const filePath = `family-photos/${fileName}`
+      const fileExt = photo.name.split('.').pop() || 'jpg'
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
+      // Upload to bucket - fileName only, bucket is specified in .from()
       const { error: uploadError } = await supabase.storage
         .from('family-photos')
-        .upload(filePath, photo)
+        .upload(fileName, photo, {
+          upsert: true
+        })
 
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        throw new Error(`Photo upload failed: ${uploadError.message}`)
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('family-photos')
-        .getPublicUrl(filePath)
+        .getPublicUrl(fileName)
 
       photoUrl = publicUrl
     }

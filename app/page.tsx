@@ -154,125 +154,138 @@ export default function Home() {
       await new Promise(resolve => setTimeout(resolve, 200))
 
       try {
-        // Find the inner tree container that has the actual scrollable content
+        // Find the scrollable container and the inner content
         const treeContainer = treeRef.current.querySelector('.family-tree-print') as HTMLElement
-        const innerTree = treeContainer?.querySelector('.min-w-max') as HTMLElement
+        // Find the inner div with the actual tree content (has inline style minWidth: 'max-content')
+        const innerTree = treeContainer?.firstElementChild as HTMLElement
         
-        // Store original styles
-        const originalOverflow = treeRef.current.style.overflow
-        const originalOverflowX = treeRef.current.style.overflowX
-        const originalOverflowY = treeRef.current.style.overflowY
-        const originalMaxWidth = treeRef.current.style.maxWidth
-        const originalMaxHeight = treeRef.current.style.maxHeight
-        const originalWidth = treeRef.current.style.width
-        const originalHeight = treeRef.current.style.height
+        // Store original styles for all elements we'll modify
+        const originalStyles = {
+          treeRef: {
+            overflow: treeRef.current.style.overflow,
+            overflowX: treeRef.current.style.overflowX,
+            overflowY: treeRef.current.style.overflowY,
+            maxWidth: treeRef.current.style.maxWidth,
+            maxHeight: treeRef.current.style.maxHeight,
+            width: treeRef.current.style.width,
+            height: treeRef.current.style.height,
+          },
+          treeContainer: treeContainer ? {
+            overflow: treeContainer.style.overflow,
+            overflowX: treeContainer.style.overflowX,
+            overflowY: treeContainer.style.overflowY,
+            width: treeContainer.style.width,
+            height: treeContainer.style.height,
+            paddingLeft: treeContainer.style.paddingLeft,
+            paddingRight: treeContainer.style.paddingRight,
+          } : null,
+          innerTree: innerTree ? {
+            paddingLeft: innerTree.style.paddingLeft,
+            paddingRight: innerTree.style.paddingRight,
+            marginLeft: innerTree.style.marginLeft,
+            marginRight: innerTree.style.marginRight,
+          } : null,
+        }
         
-        let dataUrl: string
+        // Remove all scroll constraints and centering padding to get true content size
+        treeRef.current.style.overflow = 'visible'
+        treeRef.current.style.overflowX = 'visible'
+        treeRef.current.style.overflowY = 'visible'
+        treeRef.current.style.maxWidth = 'none'
+        treeRef.current.style.maxHeight = 'none'
+        treeRef.current.style.width = 'auto'
+        treeRef.current.style.height = 'auto'
         
-        if (treeContainer && innerTree) {
-          const containerOriginalOverflow = treeContainer.style.overflow
-          const containerOriginalOverflowX = treeContainer.style.overflowX
-          const containerOriginalOverflowY = treeContainer.style.overflowY
-          const containerOriginalWidth = treeContainer.style.width
-          const containerOriginalHeight = treeContainer.style.height
-          
-          // Get the actual full dimensions by measuring the inner content
-          // First, temporarily make everything visible to get accurate measurements
-          treeRef.current.style.overflow = 'visible'
-          treeRef.current.style.overflowX = 'visible'
-          treeRef.current.style.overflowY = 'visible'
-          treeRef.current.style.maxWidth = 'none'
-          treeRef.current.style.maxHeight = 'none'
-          treeRef.current.style.width = 'auto'
-          treeRef.current.style.height = 'auto'
-          
+        if (treeContainer) {
           treeContainer.style.overflow = 'visible'
           treeContainer.style.overflowX = 'visible'
           treeContainer.style.overflowY = 'visible'
           treeContainer.style.width = 'auto'
           treeContainer.style.height = 'auto'
-          
-          // Wait for layout to recalculate
-          await new Promise(resolve => setTimeout(resolve, 500))
-          
-          // Get the actual rendered dimensions
-          const rect = innerTree.getBoundingClientRect()
-          const scrollWidth = Math.max(
-            innerTree.scrollWidth,
-            innerTree.offsetWidth,
-            rect.width,
-            treeContainer.scrollWidth,
-            treeRef.current.scrollWidth
-          )
-          const scrollHeight = Math.max(
-            innerTree.scrollHeight,
-            innerTree.offsetHeight,
-            rect.height,
-            treeContainer.scrollHeight,
-            treeRef.current.scrollHeight
-          )
-          
-          // Set explicit dimensions to ensure full capture
-          treeRef.current.style.width = `${scrollWidth + 100}px` // Add padding
-          treeRef.current.style.height = `${scrollHeight + 100}px`
-          
-          // Wait again for layout
-          await new Promise(resolve => setTimeout(resolve, 300))
+        }
+        
+        // Remove the centering padding that pushes content off-screen
+        if (innerTree) {
+          innerTree.style.paddingLeft = '0'
+          innerTree.style.paddingRight = '0'
+          innerTree.style.marginLeft = 'auto'
+          innerTree.style.marginRight = 'auto'
+        }
+        
+        // Wait for layout to recalculate
+        await new Promise(resolve => setTimeout(resolve, 300))
+        
+        // Get the actual content dimensions
+        const contentRect = innerTree?.getBoundingClientRect() || treeRef.current.getBoundingClientRect()
+        const titleRect = downloadTitle?.getBoundingClientRect()
+        
+        // Calculate total dimensions needed
+        const totalWidth = Math.max(
+          contentRect.width,
+          innerTree?.scrollWidth || 0,
+          treeContainer?.scrollWidth || 0,
+          treeRef.current.scrollWidth
+        ) + 80 // Add padding
+        
+        const totalHeight = Math.max(
+          contentRect.height + (titleRect?.height || 0) + 60,
+          innerTree?.scrollHeight || 0,
+          treeContainer?.scrollHeight || 0,
+          treeRef.current.scrollHeight
+        ) + 80 // Add padding
+        
+        // Set explicit dimensions to capture everything
+        treeRef.current.style.width = `${totalWidth}px`
+        treeRef.current.style.height = `${totalHeight}px`
+        
+        // Wait for final layout
+        await new Promise(resolve => setTimeout(resolve, 200))
 
-          // Use html-to-image which handles modern CSS better
-          dataUrl = await toPng(treeRef.current, {
-            backgroundColor: '#e0e7ff',
-            pixelRatio: 2,
-            quality: 1,
-            // Don't specify width/height, let it capture the full element
-            filter: (node) => {
-              // Hide buttons
-              if (node instanceof HTMLElement) {
-                return !(
-                  node.tagName === 'BUTTON' || 
-                  node.textContent?.trim() === 'Edit' || 
-                  node.textContent?.trim() === 'Delete' ||
-                  node.classList.contains('print:hidden') || 
-                  node.hasAttribute('data-member-form')
-                )
-              }
-              return true
+        // Capture the image
+        const dataUrl = await toPng(treeRef.current, {
+          backgroundColor: '#e0e7ff',
+          pixelRatio: 2,
+          quality: 1,
+          width: totalWidth,
+          height: totalHeight,
+          filter: (node) => {
+            if (node instanceof HTMLElement) {
+              return !(
+                node.tagName === 'BUTTON' || 
+                node.textContent?.trim() === 'Edit' || 
+                node.textContent?.trim() === 'Delete' ||
+                node.classList.contains('print:hidden') || 
+                node.hasAttribute('data-member-form')
+              )
             }
-          })
+            return true
+          }
+        })
 
-          // Restore original styles
-          treeRef.current.style.overflow = originalOverflow
-          treeRef.current.style.overflowX = originalOverflowX
-          treeRef.current.style.overflowY = originalOverflowY
-          treeRef.current.style.maxWidth = originalMaxWidth
-          treeRef.current.style.maxHeight = originalMaxHeight
-          treeRef.current.style.width = originalWidth
-          treeRef.current.style.height = originalHeight
-          
-          treeContainer.style.overflow = containerOriginalOverflow
-          treeContainer.style.overflowX = containerOriginalOverflowX
-          treeContainer.style.overflowY = containerOriginalOverflowY
-          treeContainer.style.width = containerOriginalWidth
-          treeContainer.style.height = containerOriginalHeight
-        } else {
-          // Fallback if structure is different
-          dataUrl = await toPng(treeRef.current, {
-            backgroundColor: '#e0e7ff',
-            pixelRatio: 2,
-            quality: 1,
-            filter: (node) => {
-              if (node instanceof HTMLElement) {
-                return !(
-                  node.tagName === 'BUTTON' || 
-                  node.textContent?.trim() === 'Edit' || 
-                  node.textContent?.trim() === 'Delete' ||
-                  node.classList.contains('print:hidden') || 
-                  node.hasAttribute('data-member-form')
-                )
-              }
-              return true
-            }
-          })
+        // Restore all original styles
+        treeRef.current.style.overflow = originalStyles.treeRef.overflow
+        treeRef.current.style.overflowX = originalStyles.treeRef.overflowX
+        treeRef.current.style.overflowY = originalStyles.treeRef.overflowY
+        treeRef.current.style.maxWidth = originalStyles.treeRef.maxWidth
+        treeRef.current.style.maxHeight = originalStyles.treeRef.maxHeight
+        treeRef.current.style.width = originalStyles.treeRef.width
+        treeRef.current.style.height = originalStyles.treeRef.height
+        
+        if (treeContainer && originalStyles.treeContainer) {
+          treeContainer.style.overflow = originalStyles.treeContainer.overflow
+          treeContainer.style.overflowX = originalStyles.treeContainer.overflowX
+          treeContainer.style.overflowY = originalStyles.treeContainer.overflowY
+          treeContainer.style.width = originalStyles.treeContainer.width
+          treeContainer.style.height = originalStyles.treeContainer.height
+          treeContainer.style.paddingLeft = originalStyles.treeContainer.paddingLeft
+          treeContainer.style.paddingRight = originalStyles.treeContainer.paddingRight
+        }
+        
+        if (innerTree && originalStyles.innerTree) {
+          innerTree.style.paddingLeft = originalStyles.innerTree.paddingLeft
+          innerTree.style.paddingRight = originalStyles.innerTree.paddingRight
+          innerTree.style.marginLeft = originalStyles.innerTree.marginLeft
+          innerTree.style.marginRight = originalStyles.innerTree.marginRight
         }
 
         // Hide the download title again

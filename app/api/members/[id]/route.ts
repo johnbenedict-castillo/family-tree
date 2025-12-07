@@ -38,7 +38,6 @@ export async function PUT(
       try {
         const fileExt = photo.name.split('.').pop() || 'jpg'
         const fileName = `${id}-${Date.now()}.${fileExt}`
-        const filePath = `family-photos/${fileName}`
 
         // Delete old photo if it exists (optional - don't fail if this fails)
         try {
@@ -52,11 +51,11 @@ export async function PUT(
             // Extract file path from URL and try to delete
             const urlParts = currentMemberData.photo_url.split('/family-photos/')
             if (urlParts.length > 1) {
-              const oldFilePath = urlParts[1].split('?')[0] // Remove query params if any
-              if (oldFilePath) {
+              const oldFileName = urlParts[1].split('?')[0] // Remove query params if any
+              if (oldFileName) {
                 await supabase.storage
                   .from('family-photos')
-                  .remove([oldFilePath])
+                  .remove([oldFileName])
               }
             }
           }
@@ -65,11 +64,11 @@ export async function PUT(
           console.warn('Failed to delete old photo:', deleteError)
         }
 
-        // Upload new photo
+        // Upload new photo - fileName only, bucket is specified in .from()
         const { error: uploadError } = await supabase.storage
           .from('family-photos')
-          .upload(filePath, photo, {
-            upsert: false // Don't overwrite, use unique filename
+          .upload(fileName, photo, {
+            upsert: true // Allow overwrite if same filename
           })
 
         if (uploadError) {
@@ -79,13 +78,11 @@ export async function PUT(
 
         const { data: { publicUrl } } = supabase.storage
           .from('family-photos')
-          .getPublicUrl(filePath)
+          .getPublicUrl(fileName)
 
         memberData.photo_url = publicUrl
       } catch (photoError: any) {
         console.error('Photo processing error:', photoError)
-        // Don't fail the entire update if photo upload fails, but log it
-        // You can choose to throw here if you want to require photo uploads
         throw new Error(`Photo upload failed: ${photoError.message || 'Unknown error'}`)
       }
     }
