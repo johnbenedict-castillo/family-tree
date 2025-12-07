@@ -127,14 +127,19 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
   }
 
   // Render a couple (member with optional spouse) and their children
-  const renderCouple = (member: FamilyMemberWithChildren): React.JSX.Element => {
+  const renderCouple = (member: FamilyMemberWithChildren, isRoot: boolean = false): React.JSX.Element => {
     const hasSpouse = !!member.spouse
     const hasChildren = member.children && member.children.length > 0
+    
+    // Show sub-family box when this person has both spouse and children (forms a family unit)
+    // Don't show box for root members to avoid boxing the entire tree
+    const isSubFamily = hasSpouse && hasChildren && !isRoot
 
-    return (
-      <div key={member.id} className="flex flex-col items-center relative" data-member-id={member.id}>
+    // The inner content of the family (couple + children)
+    const familyContent = (
+      <>
         {/* Couple Container - Member and Spouse side by side */}
-        <div className="flex items-center gap-2 sm:gap-4 mb-4 relative">
+        <div className={`flex items-center gap-2 sm:gap-4 ${isSubFamily ? 'mb-2' : 'mb-4'} relative`}>
           {/* Member Card - Primary (child) */}
           <div className="relative">
             <MemberCard
@@ -177,27 +182,13 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
               </div>
             </>
           )}
-          
-          {/* Vertical Line to Children - positioned at center of couple */}
-          {hasChildren && (
-            <div 
-              className="absolute w-0.5 bg-gray-400 top-full"
-              style={{
-                height: '1.5rem',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                marginTop: '1rem'
-              }}
-            ></div>
-          )}
         </div>
 
-        {/* Spacing for vertical line */}
-        {hasChildren && !hasSpouse && (
-          <div className="w-0.5 h-6 bg-gray-400 mb-2"></div>
-        )}
-        {hasChildren && hasSpouse && (
-          <div className="h-6 mb-2"></div>
+        {/* Vertical Line to Children - inside the box */}
+        {hasChildren && (
+          <div className="flex flex-col items-center">
+            <div className="w-0.5 h-4 bg-gray-400"></div>
+          </div>
         )}
 
         {/* Children Container */}
@@ -216,15 +207,47 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
             )}
             
             {/* Render each child */}
-            {member.children.map((child, index) => (
+            {member.children.map((child) => (
               <div key={child.id} className="flex flex-col items-center relative">
                 {/* Vertical line from horizontal line to child */}
                 <div className="w-0.5 h-6 bg-gray-400 mb-2"></div>
                 {/* Recursively render child couple */}
-                {renderCouple(child)}
+                {renderCouple(child, false)}
               </div>
             ))}
           </div>
+        )}
+      </>
+    )
+
+    // Determine box color based on the primary member's gender
+    const getSubFamilyBoxClasses = () => {
+      if (member.gender === 'male') {
+        return 'border-2 border-dashed border-blue-400 rounded-xl p-3 sm:p-4 bg-blue-50/50 backdrop-blur-sm shadow-sm'
+      } else if (member.gender === 'female') {
+        return 'border-2 border-dashed border-pink-400 rounded-xl p-3 sm:p-4 bg-pink-50/50 backdrop-blur-sm shadow-sm'
+      }
+      // Default/unknown gender
+      return 'border-2 border-dashed border-indigo-300 rounded-xl p-3 sm:p-4 bg-white/30 backdrop-blur-sm shadow-sm'
+    }
+
+    return (
+      <div key={member.id} className="flex flex-col items-center relative" data-member-id={member.id}>
+        {isSubFamily ? (
+          <>
+            {/* Sub-family box with rounded border - color based on primary member's gender */}
+            <div className={getSubFamilyBoxClasses()}>
+              {familyContent}
+            </div>
+          </>
+        ) : (
+          <>
+            {familyContent}
+            {/* For non-boxed families, we need the vertical line spacing */}
+            {hasChildren && !hasSpouse && !isSubFamily && (
+              <div className="w-0.5 h-2 bg-gray-400"></div>
+            )}
+          </>
         )}
       </div>
     )
@@ -278,7 +301,7 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
   return (
     <div className="flex flex-col items-center py-4 sm:py-8 family-tree-print w-full overflow-x-auto overflow-y-visible" style={{ scrollbarWidth: 'thin' }}>
       <div className="flex flex-col items-center" style={{ minWidth: 'max-content', width: 'max-content', marginLeft: 'auto', marginRight: 'auto', paddingLeft: '50%', paddingRight: '50%' }}>
-        {rootMembers.map(member => renderCouple(member))}
+        {rootMembers.map(member => renderCouple(member, true))}
       </div>
     </div>
   )
