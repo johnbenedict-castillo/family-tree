@@ -127,7 +127,7 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
   }
 
   // Render a couple (member with optional spouse) and their children
-  const renderCouple = (member: FamilyMemberWithChildren, isRoot: boolean = false): React.JSX.Element => {
+  const renderCouple = (member: FamilyMemberWithChildren, isRoot: boolean = false, generation: number = 0): React.JSX.Element => {
     const hasSpouse = !!member.spouse
     const hasChildren = member.children && member.children.length > 0
     
@@ -139,7 +139,7 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
     const familyContent = (
       <>
         {/* Couple Container - Member and Spouse side by side */}
-        <div className={`flex items-center gap-2 sm:gap-4 ${isSubFamily ? 'mb-2' : 'mb-4'} relative`}>
+        <div className={`flex items-center gap-2 sm:gap-3 ${isSubFamily ? 'mb-2' : 'mb-3'} relative`}>
           {/* Member Card - Primary (child) */}
           <div className="relative">
             <MemberCard
@@ -154,12 +154,12 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
           {hasSpouse && (
             <>
               <div className="relative flex items-center">
-                <div className="w-2 sm:w-4 h-0.5 bg-gray-400"></div>
+                <div className="w-2 sm:w-3 h-0.5 bg-gray-400"></div>
                 {/* Heart Icon */}
-                <div className="flex items-center justify-center w-4 sm:w-6 h-4 sm:h-6">
+                <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white shadow-sm">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 fill-current"
+                    className="h-3 w-3 sm:h-4 sm:w-4 text-red-500 fill-current"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >
@@ -170,7 +170,7 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
                     />
                   </svg>
                 </div>
-                <div className="w-2 sm:w-4 h-0.5 bg-gray-400"></div>
+                <div className="w-2 sm:w-3 h-0.5 bg-gray-400"></div>
               </div>
               <div className="relative">
                 <MemberCard
@@ -187,13 +187,13 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
         {/* Vertical Line to Children - inside the box */}
         {hasChildren && (
           <div className="flex flex-col items-center">
-            <div className="w-0.5 h-4 bg-gray-400"></div>
+            <div className="w-0.5 h-3 bg-gray-400"></div>
           </div>
         )}
 
         {/* Children Container */}
         {hasChildren && (
-          <div className="flex gap-4 sm:gap-8 justify-center items-start relative" style={{ minWidth: 'max-content' }}>
+          <div className="flex gap-3 sm:gap-5 justify-center items-start relative" style={{ minWidth: 'max-content' }}>
             {/* Continuous horizontal line connecting all children */}
             {member.children.length > 0 && (
               <div 
@@ -210,9 +210,9 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
             {member.children.map((child) => (
               <div key={child.id} className="flex flex-col items-center relative">
                 {/* Vertical line from horizontal line to child */}
-                <div className="w-0.5 h-6 bg-gray-400 mb-2"></div>
+                <div className="w-0.5 h-4 bg-gray-400 mb-1"></div>
                 {/* Recursively render child couple */}
-                {renderCouple(child, false)}
+                {renderCouple(child, false, generation + 1)}
               </div>
             ))}
           </div>
@@ -223,12 +223,12 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
     // Determine box color based on the primary member's gender
     const getSubFamilyBoxClasses = () => {
       if (member.gender === 'male') {
-        return 'border-2 border-dashed border-blue-400 rounded-xl p-3 sm:p-4 bg-blue-50/50 backdrop-blur-sm shadow-sm'
+        return 'border-2 border-dashed border-blue-400 rounded-xl p-2 sm:p-3 bg-blue-50/50 backdrop-blur-sm shadow-sm'
       } else if (member.gender === 'female') {
-        return 'border-2 border-dashed border-pink-400 rounded-xl p-3 sm:p-4 bg-pink-50/50 backdrop-blur-sm shadow-sm'
+        return 'border-2 border-dashed border-pink-400 rounded-xl p-2 sm:p-3 bg-pink-50/50 backdrop-blur-sm shadow-sm'
       }
       // Default/unknown gender
-      return 'border-2 border-dashed border-indigo-300 rounded-xl p-3 sm:p-4 bg-white/30 backdrop-blur-sm shadow-sm'
+      return 'border-2 border-dashed border-indigo-300 rounded-xl p-2 sm:p-3 bg-white/30 backdrop-blur-sm shadow-sm'
     }
 
     return (
@@ -248,6 +248,117 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
               <div className="w-0.5 h-2 bg-gray-400"></div>
             )}
           </>
+        )}
+      </div>
+    )
+  }
+
+  // Render the root family with special prominence
+  const renderRootFamily = (member: FamilyMemberWithChildren): React.JSX.Element => {
+    const hasSpouse = !!member.spouse
+    const hasChildren = member.children && member.children.length > 0
+
+    return (
+      <div key={member.id} className="flex flex-col items-center" data-member-id={member.id}>
+        {/* Root Family - Founding Parents with special styling */}
+        <div className="relative mb-4">
+          {/* Decorative background glow */}
+          <div className="absolute inset-0 bg-gradient-to-b from-amber-200/40 via-yellow-100/30 to-transparent rounded-3xl blur-xl transform scale-110"></div>
+          
+          {/* Root family container */}
+          <div className="relative border-2 border-amber-400 rounded-2xl p-4 sm:p-6 bg-gradient-to-b from-amber-50/80 to-white/60 backdrop-blur-sm shadow-lg">
+            {/* Crown/Star decoration */}
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-amber-400 rounded-full p-1.5 shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            </div>
+            
+            {/* Founding Parents label */}
+            <div className="text-center mb-3">
+              <span className="text-xs sm:text-sm font-semibold text-amber-700 tracking-wide uppercase">Founding Parents</span>
+            </div>
+            
+            {/* Couple Container */}
+            <div className="flex items-center gap-2 sm:gap-3 relative justify-center">
+              {/* Member Card - Primary */}
+              <div className="relative">
+                <MemberCard
+                  member={member}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  isPrimary={true}
+                />
+              </div>
+
+              {/* Spouse Connection Line and Spouse Card */}
+              {hasSpouse && (
+                <>
+                  <div className="relative flex items-center">
+                    <div className="w-2 sm:w-3 h-0.5 bg-amber-400"></div>
+                    {/* Heart Icon */}
+                    <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-red-400 to-pink-500 shadow-md">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-3 w-3 sm:h-4 sm:w-4 text-white fill-current"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="w-2 sm:w-3 h-0.5 bg-amber-400"></div>
+                  </div>
+                  <div className="relative">
+                    <MemberCard
+                      member={member.spouse!}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                      isPrimary={false}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Vertical Line to Children */}
+        {hasChildren && (
+          <div className="flex flex-col items-center">
+            <div className="w-0.5 h-6 bg-gradient-to-b from-amber-400 to-gray-400"></div>
+          </div>
+        )}
+
+        {/* Children Container */}
+        {hasChildren && (
+          <div className="flex gap-3 sm:gap-5 justify-center items-start relative" style={{ minWidth: 'max-content' }}>
+            {/* Continuous horizontal line connecting all children */}
+            {member.children.length > 0 && (
+              <div 
+                className="absolute top-0 h-0.5 bg-gray-400"
+                style={{
+                  left: '0',
+                  right: '0',
+                  width: '100%'
+                }}
+              ></div>
+            )}
+            
+            {/* Render each child */}
+            {member.children.map((child) => (
+              <div key={child.id} className="flex flex-col items-center relative">
+                {/* Vertical line from horizontal line to child */}
+                <div className="w-0.5 h-4 bg-gray-400 mb-1"></div>
+                {/* Recursively render child couple */}
+                {renderCouple(child, false, 1)}
+              </div>
+            ))}
+          </div>
         )}
       </div>
     )
@@ -301,7 +412,7 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
   return (
     <div className="flex flex-col items-center py-4 sm:py-8 family-tree-print w-full overflow-x-auto overflow-y-visible" style={{ scrollbarWidth: 'thin' }}>
       <div className="flex flex-col items-center" style={{ minWidth: 'max-content', width: 'max-content', marginLeft: 'auto', marginRight: 'auto', paddingLeft: '50%', paddingRight: '50%' }}>
-        {rootMembers.map(member => renderCouple(member, true))}
+        {rootMembers.map(member => renderRootFamily(member))}
       </div>
     </div>
   )

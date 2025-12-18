@@ -25,6 +25,31 @@ export default function Home() {
     fetchMembers()
   }, [])
 
+  // Center the scroll on the Founding Parents when members are loaded
+  useEffect(() => {
+    if (members.length > 0 && treeRef.current) {
+      // Small delay to ensure the tree has rendered
+      const timer = setTimeout(() => {
+        const container = treeRef.current
+        if (container) {
+          // Find the scrollable element inside (the one with overflow-x-auto)
+          const scrollableElement = container.querySelector('.family-tree-print') as HTMLElement
+          if (scrollableElement) {
+            // Calculate center position
+            const scrollWidth = scrollableElement.scrollWidth
+            const clientWidth = scrollableElement.clientWidth
+            const centerScroll = (scrollWidth - clientWidth) / 2
+            
+            // Scroll to center
+            scrollableElement.scrollLeft = centerScroll
+          }
+        }
+      }, 100)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [members])
+
   const fetchMembers = async () => {
     try {
       const response = await fetch('/api/members')
@@ -119,8 +144,13 @@ export default function Home() {
   }
 
   const handleDownloadTree = async () => {
-    if (!treeRef.current) return
+    if (!treeRef.current) {
+      console.error('Tree ref is null')
+      alert('Unable to download: Tree not ready')
+      return
+    }
 
+    console.log('Starting download...')
     setIsDownloading(true)
     try {
       // Hide buttons and form before capturing
@@ -242,19 +272,11 @@ export default function Home() {
         await new Promise(resolve => setTimeout(resolve, 200))
 
         // Capture the image with high resolution for crisp output
+        // Use pixelRatio 3 for balance between quality and performance
         const dataUrl = await toPng(treeRef.current, {
           backgroundColor: '#e0e7ff',
-          pixelRatio: 4, // High resolution - 4x for crisp zooming
-          quality: 1,
-          width: totalWidth,
-          height: totalHeight,
-          cacheBust: true, // Ensure fresh render
-          skipAutoScale: false,
-          style: {
-            // Ensure text rendering is crisp
-            textRendering: 'optimizeLegibility',
-            WebkitFontSmoothing: 'antialiased',
-          },
+          pixelRatio: 3,
+          cacheBust: true,
           filter: (node) => {
             if (node instanceof HTMLElement) {
               return !(
@@ -268,6 +290,12 @@ export default function Home() {
             return true
           }
         })
+        
+        if (!dataUrl) {
+          throw new Error('Failed to generate image')
+        }
+        
+        console.log('Image captured successfully, size:', dataUrl.length)
 
         // Restore all original styles
         treeRef.current.style.overflow = originalStyles.treeRef.overflow
@@ -308,13 +336,27 @@ export default function Home() {
         })
 
         // Download the image
+        const sanitizedTitle = (treeTitle || 'Castillo - Cabral Family').replace(/[^a-z0-9]/gi, '_').toLowerCase()
+        const fileName = `${sanitizedTitle}.png`
+        
+        // Use a more reliable download method
         const link = document.createElement('a')
         link.href = dataUrl
-        const sanitizedTitle = (treeTitle || 'Castillo - Cabral Family').replace(/[^a-z0-9]/gi, '_').toLowerCase()
-        link.download = `${sanitizedTitle}.png`
+        link.download = fileName
+        link.style.display = 'none'
         document.body.appendChild(link)
+        
+        // Trigger download
+        console.log('Triggering download for:', fileName)
         link.click()
-        document.body.removeChild(link)
+        
+        // Cleanup after a short delay
+        setTimeout(() => {
+          if (link.parentNode) {
+            document.body.removeChild(link)
+          }
+          console.log('Download triggered successfully')
+        }, 100)
       } catch (captureError) {
         // Hide the download title again
         if (downloadTitle) {
