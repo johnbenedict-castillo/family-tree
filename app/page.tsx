@@ -13,9 +13,9 @@ export default function Home() {
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null)
   const [treeTitle, setTreeTitle] = useState<string>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('familyTreeTitle') || 'Family Tree'
+      return localStorage.getItem('familyTreeTitle') || 'Castillo - Cabral Family'
     }
-    return 'Family Tree'
+    return 'Castillo - Cabral Family'
   })
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
@@ -241,13 +241,20 @@ export default function Home() {
         // Wait for final layout
         await new Promise(resolve => setTimeout(resolve, 200))
 
-        // Capture the image
+        // Capture the image with high resolution for crisp output
         const dataUrl = await toPng(treeRef.current, {
           backgroundColor: '#e0e7ff',
-          pixelRatio: 2,
+          pixelRatio: 4, // High resolution - 4x for crisp zooming
           quality: 1,
           width: totalWidth,
           height: totalHeight,
+          cacheBust: true, // Ensure fresh render
+          skipAutoScale: false,
+          style: {
+            // Ensure text rendering is crisp
+            textRendering: 'optimizeLegibility',
+            WebkitFontSmoothing: 'antialiased',
+          },
           filter: (node) => {
             if (node instanceof HTMLElement) {
               return !(
@@ -303,7 +310,7 @@ export default function Home() {
         // Download the image
         const link = document.createElement('a')
         link.href = dataUrl
-        const sanitizedTitle = (treeTitle || 'Family Tree').replace(/[^a-z0-9]/gi, '_').toLowerCase()
+        const sanitizedTitle = (treeTitle || 'Castillo - Cabral Family').replace(/[^a-z0-9]/gi, '_').toLowerCase()
         link.download = `${sanitizedTitle}.png`
         document.body.appendChild(link)
         link.click()
@@ -363,7 +370,7 @@ export default function Home() {
                 }
                 if (e.key === 'Escape') {
                   setIsEditingTitle(false)
-                  setTreeTitle(localStorage.getItem('familyTreeTitle') || 'Family Tree')
+                  setTreeTitle(localStorage.getItem('familyTreeTitle') || 'Castillo - Cabral Family')
                 }
               }}
               className="text-2xl sm:text-4xl font-bold text-gray-800 mb-2 text-center bg-transparent border-2 border-blue-500 rounded px-2 sm:px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
