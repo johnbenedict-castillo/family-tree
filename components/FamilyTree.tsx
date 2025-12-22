@@ -12,9 +12,12 @@ interface FamilyTreeProps {
   members: FamilyMember[]
   onEdit?: (member: FamilyMember) => void
   onDelete?: (id: string) => void
+  focusedMemberId?: string | null
+  onViewFamily?: (memberId: string) => void
+  onBackToFull?: () => void
 }
 
-export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProps) {
+export default function FamilyTree({ members, onEdit, onDelete, focusedMemberId, onViewFamily, onBackToFull }: FamilyTreeProps) {
   // Build tree structure - simple recursive function
   const buildTree = (parentId: string | null = null): FamilyMemberWithChildren[] => {
     // Get all direct children of this parent, sorted by child_order
@@ -191,8 +194,8 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
           </div>
         )}
 
-        {/* Children Container */}
-        {hasChildren && (
+        {/* Children Container - HORIZONTAL for first generation */}
+        {hasChildren && generation < 1 && (
           <div className="flex gap-3 sm:gap-5 justify-center items-start relative" style={{ minWidth: 'max-content' }}>
             {/* Continuous horizontal line connecting all children */}
             {member.children.length > 0 && (
@@ -217,6 +220,37 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
             ))}
           </div>
         )}
+
+        {/* Children Container - VERTICAL for grandchildren+ (generation >= 1) */}
+        {hasChildren && generation >= 1 && (
+          <div className="ml-4">
+            {member.children.map((child, index) => (
+              <div key={child.id} className="flex">
+                {/* Tree connector */}
+                <div className="flex flex-col items-center mr-2" style={{ width: '16px' }}>
+                  {/* Vertical line segment */}
+                  <div 
+                    className="w-0.5 bg-gray-400" 
+                    style={{ height: '40px' }}
+                  ></div>
+                  {/* Continue vertical line for non-last children */}
+                  {index < member.children.length - 1 && (
+                    <div className="w-0.5 bg-gray-400 flex-1"></div>
+                  )}
+                </div>
+                {/* Horizontal branch + child */}
+                <div className="flex items-start pb-3">
+                  <div 
+                    className="w-4 h-0.5 bg-gray-400 mt-10 mr-1"
+                  ></div>
+                  <div>
+                    {renderCouple(child, false, generation + 1)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </>
     )
 
@@ -236,7 +270,21 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
         {isSubFamily ? (
           <>
             {/* Sub-family box with rounded border - color based on primary member's gender */}
-            <div className={getSubFamilyBoxClasses()}>
+            <div className={`${getSubFamilyBoxClasses()} relative`}>
+              {/* View Family Button */}
+              {onViewFamily && (
+                <button
+                  onClick={() => onViewFamily(member.id)}
+                  className="absolute -top-2 -right-2 bg-white hover:bg-gray-100 text-gray-600 hover:text-gray-800 text-xs font-medium px-2 py-1 rounded-full shadow-md border border-gray-200 transition-colors flex items-center gap-1 z-10"
+                  title={`View ${member.first_name}'s family`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                  </svg>
+                  View
+                </button>
+              )}
               {familyContent}
             </div>
           </>
@@ -400,11 +448,71 @@ export default function FamilyTree({ members, onEdit, onDelete }: FamilyTreeProp
     !spouseIds.has(member.id) && !rootMembersToRemove.has(member.id)
   )
 
-  if (rootMembers.length === 0) {
+  if (rootMembers.length === 0 && !focusedMemberId) {
     return (
       <div className="text-center py-12 text-gray-500">
         <p className="text-lg">No family members yet.</p>
         <p className="text-sm mt-2">Click "Add Member" to start building your family tree!</p>
+      </div>
+    )
+  }
+
+  // Find a member by ID in the tree structure
+  const findMemberInTree = (nodes: FamilyMemberWithChildren[], id: string): FamilyMemberWithChildren | null => {
+    for (const node of nodes) {
+      if (node.id === id) return node
+      if (node.spouse?.id === id) return node // Return the couple if spouse is selected
+      const found = findMemberInTree(node.children, id)
+      if (found) return found
+    }
+    return null
+  }
+
+  // If viewing a focused family, find that member and render them as root
+  if (focusedMemberId) {
+    const focusedMember = findMemberInTree(allRootMembers, focusedMemberId)
+    
+    if (!focusedMember) {
+      return (
+        <div className="text-center py-12 text-gray-500">
+          <p className="text-lg">Family member not found.</p>
+          {onBackToFull && (
+            <button
+              onClick={onBackToFull}
+              className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors"
+            >
+              ← Back to Full Tree
+            </button>
+          )}
+        </div>
+      )
+    }
+
+    const focusedName = focusedMember.spouse 
+      ? `${focusedMember.first_name} & ${focusedMember.spouse.first_name}'s Family`
+      : `${focusedMember.first_name}'s Family`
+
+    return (
+      <div className="flex flex-col items-center py-4 sm:py-8 family-tree-print w-full overflow-x-auto overflow-y-visible" style={{ scrollbarWidth: 'thin' }}>
+        {/* Back button and family name */}
+        <div className="mb-6 flex flex-col items-center gap-3">
+          {onBackToFull && (
+            <button
+              onClick={onBackToFull}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center gap-2 text-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+              </svg>
+              Back to Full Tree
+            </button>
+          )}
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-700">{focusedName}</h2>
+        </div>
+        
+        <div className="flex flex-col items-center" style={{ minWidth: 'max-content', width: 'max-content', marginLeft: 'auto', marginRight: 'auto', paddingLeft: '50%', paddingRight: '50%' }}>
+          {renderRootFamily(focusedMember)}
+        </div>
       </div>
     )
   }

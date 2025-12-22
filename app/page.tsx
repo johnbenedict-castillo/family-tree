@@ -19,13 +19,14 @@ export default function Home() {
   })
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [focusedFamilyId, setFocusedFamilyId] = useState<string | null>(null)
   const treeRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetchMembers()
   }, [])
 
-  // Center the scroll on the Founding Parents when members are loaded
+  // Center the scroll on the Founding Parents when members are loaded or focused family changes
   useEffect(() => {
     if (members.length > 0 && treeRef.current) {
       // Small delay to ensure the tree has rendered
@@ -48,7 +49,7 @@ export default function Home() {
       
       return () => clearTimeout(timer)
     }
-  }, [members])
+  }, [members, focusedFamilyId])
 
   const fetchMembers = async () => {
     try {
@@ -482,6 +483,9 @@ export default function Home() {
             members={members}
             onEdit={handleEditMember}
             onDelete={handleDeleteMember}
+            focusedMemberId={focusedFamilyId}
+            onViewFamily={(memberId) => setFocusedFamilyId(memberId)}
+            onBackToFull={() => setFocusedFamilyId(null)}
           />
         </div>
 
